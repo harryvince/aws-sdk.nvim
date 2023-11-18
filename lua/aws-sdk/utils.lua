@@ -3,45 +3,42 @@ local M = {}
 local pickers = require('telescope.pickers')
 local previewers = require('telescope.previewers')
 local finders = require('telescope.finders')
-local conf = require('telescope.config').values
-
 local actions = require('telescope.actions')
 local action_state = require('telescope.actions.state')
+local conf = require('telescope.config').values
 
 local curl = require('plenary.curl')
 
-local packages = require('aws-sdk.packages')
+local internal = require('aws-sdk.internal')
+local constants = require('aws-sdk.constants')
 
-local removePtags = function(input)
-    input = input:gsub("<p>", "")
-    input = input:gsub("</p>", "")
-    return input
-end
-
-M.packages = function(opts)
+M.initial_search = function(opts, search_list, callback)
     opts = opts or {}
+    opts['aws-sdk'] = {}
+
     pickers.new(opts, {
         prompt_title = "Packages",
         finder = finders.new_table {
-            results = packages
+            results = search_list
         },
         sorter = conf.generic_sorter(opts),
         attach_mappings = function(prompt_bufnr, map)
             actions.select_default:replace(function()
                 actions.close(prompt_bufnr)
                 local selection = action_state.get_selected_entry()
-                print(selection[1])
-                M.operations(selection[1], opts)
+                opts['aws-sdk'].client = selection[1]
+                callback(opts)
             end)
             return true
         end,
     }):find()
 end
 
-M.operations = function(client, opts)
+M.operations = function(opts)
+    local client = opts['aws-sdk'].client
+
     local response = curl.get(
-        'https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/_next/data/preview/client/' ..
-        client .. '.json?client=' .. client)
+        constants.preview_url .. client .. constants.preview_options .. client)
     local operations = vim.fn.json_decode(response.body).pageProps.operations
 
     opts = opts or {}
@@ -51,8 +48,7 @@ M.operations = function(client, opts)
             results = operations,
             entry_maker = function(entry)
                 return {
-                    value = 'https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/' ..
-                        client .. '/command/' .. entry.name,
+                    value = constants.doc_url .. client .. '/command/' .. entry.name,
                     display = entry.name,
                     ordinal = entry.name,
                     summary = entry.summary
@@ -61,18 +57,15 @@ M.operations = function(client, opts)
         },
         previewer = previewers.new_buffer_previewer({
             title = "Command Summary",
-            define_preview = function(self, entry, status)
-                vim.api.nvim_win_set_option(self.state.winid, "wrap", true)
-                vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, { removePtags(entry.summary) })
-            end
+            define_preview = internal.preview
         }),
         sorter = conf.generic_sorter(opts),
         attach_mappings = function(prompt_bufnr, map)
             actions.select_default:replace(function()
                 actions.close(prompt_bufnr)
                 local selection = action_state.get_selected_entry()
-                vim.fn.setreg('+', selection.value)
-                vim.notify(selection.display .. ' documenatation url added to clipboard')
+                internal.copy_to_clipboard(selection.value)
+                vim.notify(selection.display .. ' documentation url added to clipboard')
             end)
             return true
         end,
