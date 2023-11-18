@@ -13,7 +13,6 @@ Example using [lazy.nvim](https://github.com/folke/lazy.nvim)
     { 'nvim-lua/plenary.nvim' }
   },
   config = function ()
-      local options = { noremap = true }
       local aws = require('aws-sdk')
 
       vim.keymap.set('n', '<leader>aws', aws.find_command)
@@ -28,7 +27,6 @@ return {
         { 'nvim-lua/plenary.nvim' }
       },
       config = function ()
-          local options = { noremap = true }
           local aws = require('aws-sdk')
 
           vim.keymap.set('n', '<leader>aws', aws.find_command)
