@@ -19,7 +19,7 @@ Example using [lazy.nvim](https://github.com/folke/lazy.nvim)
   end
 }
 
--- plugins/telescope.lua:
+-- plugins/aws-sdk.lua:
 return {
       'harryvince/aws-sdk.nvim',
       dependencies = { 
