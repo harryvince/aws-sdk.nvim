@@ -69,16 +69,20 @@ M.operations = function(opts)
 					local selection = action_state.get_selected_entry()
 					local command = selection.display
 
-					if command == last_command_picked then
-						actions.close(prompt_bufnr)
-						internal.copy_to_clipboard(selection.value)
-						vim.notify(selection.display .. " documentation url added to clipboard")
-					else
-						last_command_picked = command
-						local example = internal.get_command_example(client, selection.display)
-						local previewer = action_state.get_current_picker(prompt_bufnr).previewer
-                        vim.api.nvim_buf_set_lines(previewer.state.bufnr, 0, -1, false, example)
-					end
+					actions.close(prompt_bufnr)
+					internal.copy_to_clipboard(selection.value)
+					vim.notify(selection.display .. " documentation url added to clipboard")
+
+					--if command == last_command_picked then
+					--actions.close(prompt_bufnr)
+					--internal.copy_to_clipboard(selection.value)
+					--vim.notify(selection.display .. " documentation url added to clipboard")
+					--else
+					--last_command_picked = command
+					--local example = internal.get_command_example(client, selection.display)
+					--local previewer = action_state.get_current_picker(prompt_bufnr).previewer
+					--vim.api.nvim_buf_set_lines(previewer.state.bufnr, 0, -1, false, example)
+					--end
 				end)
 				return true
 			end,
